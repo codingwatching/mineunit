@@ -83,7 +83,7 @@ function fn_register.toolrepair(t)
 			"core.register_craft: t.additional_wear number expected, got " .. type(t.additional_wear)
 		)
 	end
-	mineunit:warning("RECIPE TYPE toolrepair NOT REGISTERED", dump(t))
+	mineunit:warningf("RECIPE TYPE toolrepair NOT REGISTERED: %t", t)
 	-- TODO: Store registered toolrepair recipes
 	--CM:registerCraft("toolrepair", error("TODO"), t.output, t)
 end

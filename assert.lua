@@ -52,7 +52,6 @@ local function _count(t)
 		c = c + 1
 	end
 	return c
-	--mineunit:warning("count(t)", "invalid value", type(t))
 end
 local function count(t)
 	return lua_type(t) == "table" and _count(t)
@@ -66,7 +65,6 @@ local function tabletype(t)
 			return "hash"
 		end
 	end
-	--mineunit:warning("tabletype(t)", "invalid value", type(t))
 end
 
 local function in_array(t, value)

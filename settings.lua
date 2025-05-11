@@ -383,17 +383,19 @@ local function is_yes(value)
 end
 
 function Settings:get(key)
-	mineunit:debug("Settings:get(...)", key, self._data[key])
+	mineunit:debugf("Settings:get('%s') -> '%s'", key, self._data[key])
 	return self._data[key]
 end
 
 function Settings:get_bool(key, default)
 	local value = self._data[key]
-	mineunit:debug("Settings:get_bool(...)", key, value and is_yes(value) or value, default)
 	if value == nil then
+		mineunit:debugf("Settings:get_bool('%s', %s) -> (default) -> '%s'", key, default, default)
 		return default
 	end
-	return is_yes(value)
+	local result = is_yes(value)
+	mineunit:debugf("Settings:get_bool('%s', %s) -> '%s' -> '%s'", key, default, value, result)
+	return result
 end
 
 function Settings:set(key, value)
@@ -410,7 +412,7 @@ function Settings:write(...)
 end
 
 function Settings:remove(key)
-	mineunit:debug("Settings:remove(...)", key, self._data[key])
+	mineunit:debugf("Settings:remove('%s') -> '%s'", key, self._data[key])
 	self._data[key] = nil
 	return true
 end
@@ -434,14 +436,14 @@ end
 local function load_conf_file(fname, target)
 	local file = io.open(fname, "r")
 	if file then
-		mineunit:debug("Settings object loading values from:", fname)
+		mineunit:debugf("Settings loading values: %s", fname)
 		for line in file:lines() do
 			for key, value in string.gmatch(line, "([^=%s]+)%s*=%s*(.-)%s*$") do
-				mineunit:debug("\t", key, "=", value)
+				mineunit:debugf("\t%s \t= %s", key, value)
 				target[key] = value
 			end
 		end
-		mineunit:info("Settings object created from:", fname)
+		mineunit:infof("Settings created from: %s", fname)
 		return true
 	end
 end
@@ -454,7 +456,7 @@ mineunit.export_object(Settings, {
 		-- Not even nearly perfect config parser but should be good enough for now
 		if not load_conf_file(fname, settings._data) then
 			if not load_conf_file(fixture_path(fname), settings._data) then
-				mineunit:info("File not found, creating empty Settings object:", fname)
+				mineunit:infof("File not found, Settings will be empty: %s", fname)
 			end
 		end
 		setmetatable(settings, Settings)

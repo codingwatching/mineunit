@@ -64,7 +64,7 @@ local mod_storage = {}
 _G.core.get_mod_storage = function()
 	local modname = core.get_current_modname()
 	if not mod_storage[modname] then
-		mineunit:debugf("core.get_mod_storage(): initializing new storage for mod name %s", modname)
+		mineunit:debugf("Initializing mod storage for %s", modname)
 		mod_storage[modname] = MetaDataRef()
 	end
 	return mod_storage[modname]
@@ -89,9 +89,9 @@ _G.core.get_inventory = function(where)
 end
 _G.core.create_detached_inventory = function(name, callbacks, player_name)
 	assert.is_string(name)
-	mineunit:debugf("core.create_detached_inventory(): initializing new detached inventory '%s'", name)
+	mineunit:debugf("Initializing detached inventory '%s'", name)
 	if player_name then
-		mineunit:warningf("core.create_detached_inventory(): ignoring player_name '%s'", player_name)
+		mineunit:warningf("core.create_detached_inventory(...): ignored player name '%s'", player_name)
 	end
 	inv_storage[name] = InvRef()
 	return inv_storage[name]

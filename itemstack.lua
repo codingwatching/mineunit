@@ -224,7 +224,7 @@ mineunit.export_object(ItemStack, {
 			-- Add file path and line to make it easier to find problem source.
 			local info = debug.getinfo(3)
 			local src = ("%s:%d"):format(info.short_src, info.currentline)
-			mineunit:warning("ItemStack() called without arguments, use ItemStack(nil) instead ("..src..")")
+			mineunit:warningf("ItemStack() called without arguments, use ItemStack(nil) instead:\n\t'%s'", src)
 		end
 		-- Read arguments
 		assert(argc <= 1, "ItemStack(...) called with extra arguments, use exactly one argument")
