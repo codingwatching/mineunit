@@ -1,3 +1,22 @@
+-- Type overrides
+
+local lua_type = type
+
+local function mineunit_type(obj)
+	if lua_type(obj) == "table" then
+		return rawget(obj, "_mineunit_typename")
+	end
+end
+
+function type(value)
+	local typename = mineunit_type(value)
+	if typename then
+		return typename == "table" and "table" or "userdata"
+	end
+	return lua_type(value)
+end
+
+-- Utilities
 
 local function round(value)
 	return (value < 0) and math.ceil(value - 0.5) or math.floor(value + 0.5)
@@ -14,7 +33,7 @@ local function path(t, s, ignorefirst)
 	return t
 end
 
-local function sequential(t)
+local function _sequential(t)
 	local p = 1
 	for i,_ in pairs(t) do
 		if i ~= p then return false end
@@ -22,21 +41,26 @@ local function sequential(t)
 	end
 	return true
 end
+local function sequential(t)
+	return type(t) == "table" or type(t) == "userdata" and _sequential(t)
+end
 
-local function count(t)
-	if type(t) == "table" or type(t) == "userdata" then
-		local c = 0
-		for a,b in pairs(t) do
-			c = c + 1
-		end
-		return c
+
+local function _count(t)
+	local c = 0
+	for a,b in pairs(t) do
+		c = c + 1
 	end
+	return c
 	--mineunit:warning("count(t)", "invalid value", type(t))
+end
+local function count(t)
+	return lua_type(t) == "table" and _count(t)
 end
 
 local function tabletype(t)
 	if type(t) == "table" or type(t) == "userdata" then
-		if count(t) == #t and sequential(t) then
+		if _count(t) == #t and _sequential(t) then
 			return "array"
 		else
 			return "hash"
@@ -46,12 +70,14 @@ local function tabletype(t)
 end
 
 local function in_array(t, value)
-	for i, v in ipairs(t) do
-		if v == value then
-			return i
+	if lua_type(t) == "table" then
+		for i, v in ipairs(t) do
+			if v == value then
+				return i
+			end
 		end
+		return false
 	end
-	return false
 end
 
 local coordinate_keys = {x=true, y=true, z=true}
@@ -73,24 +99,6 @@ local function format_coordinate(t)
 		table.insert(result, k .. "=" .. (rawget(t, k) or "nil"))
 	end
 	return "{" .. table.concat(result, ",") .. "}"
-end
-
--- Type overrides
-
-local lua_type = type
-
-local function mineunit_type(obj)
-	if lua_type(obj) == "table" then
-		return rawget(obj, "_mineunit_typename")
-	end
-end
-
-function type(value)
-	local typename = mineunit_type(value)
-	if typename then
-		return typename == "table" and "table" or "userdata"
-	end
-	return lua_type(value)
 end
 
 --
@@ -119,13 +127,33 @@ function spy.on(target_table, target_key)
 end
 
 local assert = require('luassert.assert')
+assert:set_parameter("TableFormatLevel", 4)
+assert:set_parameter("TableFormatShowRecursion", true)
+
 local format_argument = require('luassert.state').format_argument
 local say = require("say")
+
+local function register_positive_fmt(name, fmtstr)
+	say:set("assertion." .. name .. ".positive", fmtstr)
+end
+
+local function register_negative_fmt(name, fmtstr)
+	say:set("assertion." .. name .. ".negative", fmtstr)
+end
 
 local function setmsg(state, msg)
 	if lua_type(msg) == "string" then
 		state.failure_message = msg
 	end
+end
+
+local function register_basic_assert(name, argc, fn)
+	local positivefmt = "assertion." .. name .. ".positive"
+	local negativefmt = "assertion." .. name .. ".negative"
+	assert:register("assertion", name, function(state, args)
+		setmsg(state, args[argc + 1])
+		return fn(args)
+	end, positivefmt, negativefmt)
 end
 
 local function fmtargs(argc, args)
@@ -153,32 +181,37 @@ local function register(name, argc, msg, fn)
 	assert:register("assertion", name, wrapper, "assertion."..name..".negative")
 end
 
-register("table", 1, "Expected %s to be table", function(args)
-	return lua_type(args[1]) == "table"
-end)
+register_positive_fmt("table", "Expected %s to be a table")
+register_negative_fmt("table", "Expected %s to not be a table")
+register_basic_assert("table", 1, function(args) return lua_type(args[1]) == "table" end)
 
-register("indexed", 1, "Expected %s to be indexed array", function(args)
-	return tabletype(args[1]) == "array"
-end)
+register_positive_fmt("indexed", "Expected %s to be an indexed array")
+register_negative_fmt("indexed", "Expected %s to not be an indexed array")
+register_basic_assert("indexed", 1, function(args) return tabletype(args[1]) == "array" end)
 
-register("hashed", 1, "Expected %s to be hash table", function(args)
-	return tabletype(args[1]) == "hash"
-end)
+register_positive_fmt("hashed", "Expected %s to be a hash table")
+register_negative_fmt("hashed", "Expected %s to not be a hash table")
+register_basic_assert("hashed", 1, function(args) return tabletype(args[1]) == "hash" end)
 
-register("integer", 1, "Expected %s to be integer", function(args)
-	return type(args[1]) == "number" and args[1] == math.floor(args[1])
-end)
+register_positive_fmt("integer", "Expected %s to be an integer")
+register_negative_fmt("integer", "Expected %s to not be an integer")
+register_basic_assert("integer", 1, function(args) return type(args[1]) == "number" and args[1] == math.floor(args[1]) end)
 
-register("gt", 2, "Expected %s to be more than %s", function(args)
-	return args[1] > args[2]
-end)
+register_positive_fmt("gt", "Expected %s to be greater than %s")
+register_negative_fmt("gt", "Expected %s to not be greater than %s")
+register_basic_assert("gt", 2, function(args) return args[1] > args[2] end)
 
-register("lt", 2, "Expected %s to be less than %s", function(args)
-	return args[1] < args[2]
-end)
+register_positive_fmt("lt", "Expected %s to be less than %s")
+register_negative_fmt("lt", "Expected %s to not be less than %s")
+register_basic_assert("lt", 2, function(args) return args[1] < args[2] end)
 
-register("in_array", 2, "Expected %s to be in array %s", function(args)
-	return in_array(args[2], args[1])
+register_positive_fmt("in_array", "Expected %s to be in %s")
+register_negative_fmt("in_array", "Expected %s to not be in %s")
+register_basic_assert("in_array", 2, function(args)
+	if lua_type(args[2]) == "table" then
+		return in_array(args[2], args[1])
+	end
+	error("second argument of 'in_array' must be a table, got "..lua_type(args[2]))
 end)
 
 local function check_nodename(state,args)
@@ -201,8 +234,9 @@ local function close_enough(state, args)
 end
 assert:register("assertion", "close_enough", close_enough)
 
-say:set("assertion.is_coordinate.negative", "Expected %s to be valid coordinates")
-assert:register("assertion", "is_coordinate", is_coordinate, "assertion.is_coordinate.negative")
+register_positive_fmt("coordinate", "Expected %s to be a valid coordinate")
+register_negative_fmt("coordinate", "Expected %s to not be a valid coordinate")
+register_basic_assert("coordinate", 1, is_coordinate)
 
 -- TODO: Add configuration to allow relaxed requirements, very strict by default.
 -- Not meant to allow empty string, not meant to allow registration prefix, only itemname or modname:itemname.
@@ -236,13 +270,9 @@ local mineunit_types = {
 	"Player"
 }
 for _, typename in ipairs(mineunit_types) do
-	local assertname = "is_" .. typename
-	local function checktype(state, args)
-		setmsg(state, args[2])
-		return mineunit_type(args[1]) == typename
-	end
-	say:set("assertion."..assertname..".negative", "Expected %s to be "..typename)
-	assert:register("assertion", typename, checktype, "assertion."..assertname..".negative")
+	register_positive_fmt(typename, "Expected %s to be "..typename)
+	register_negative_fmt(typename, "Expected %s to not be "..typename)
+	register_basic_assert(typename, 1, function(args) return mineunit_type(args[1]) == typename end)
 end
 
 -- Inventory assertions
