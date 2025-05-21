@@ -370,7 +370,7 @@ function Player:do_use(...) -- (pointed_thing/pos/controls, controls if arg1)
 	local item = self:get_wielded_item()
 	local itemdef = item:get_definition()
 	if itemdef and itemdef.on_use then
-		mineunit:debugf("%s:do_use(%s, %s) with %s", self, pointed_thing, controls, item)
+		mineunit:debugf("%s:do_use(%s, %s) with %s", self, pointed_thing_or_pos, controls, item)
 		local pointed_thing = get_pointed_thing(self, pointed_thing_or_pos, itemdef.range)
 		local returnstack
 		tempcontrols(self, controls)
@@ -381,7 +381,7 @@ function Player:do_use(...) -- (pointed_thing/pos/controls, controls if arg1)
 			self._inv:set_stack("main", self._wield_index, ItemStack(returnstack))
 		end
 	else
-		mineunit:debugf("%s:do_use(%s, %s) with unknown %s", self, pointed_thing, controls, item)
+		mineunit:debugf("%s:do_use(%s, %s) with unknown %s", self, pointed_thing_or_pos, controls, item)
 	end
 end
 
