@@ -359,14 +359,20 @@ do -- Parse cli args
 			doc("MetaDataRef", "thing", "Thing is valid MetaData class instance.")
 			doc("NodeMetaRef", "thing", "Thing is valid NodeMeta class instance.")
 			doc("Player", "thing", "Thing is valid Player class instance.")
+			doc("has_item", "Inventory", "itemstring|ItemStack", "")
+			doc("has_item", "Inventory", "listname", "itemstring|ItemStack", "")
+			doc("has_item", "Inventory", "listname", "slotnumber", "itemstring|ItemStack", "")
 			doc("has_item", "Player", "itemstring|ItemStack", "")
 			doc("has_item", "Player", "listname", "itemstring|ItemStack", "")
 			doc("has_item", "Player", "listname", "slotnumber", "itemstring|ItemStack", "")
+			doc("has_item", "MetaData", "itemstring|ItemStack", "")
+			doc("has_item", "MetaData", "listname", "itemstring|ItemStack", "")
+			doc("has_item", "MetaData", "listname", "slotnumber", "itemstring|ItemStack", "")
 			doc("has_item", "coordinate", "itemstring|ItemStack)", "")
 			doc("has_item", "coordinate", "listname", "itemstring|ItemStack", "")
 			doc("has_item", "coordinate", "listname", "slotnumber", "itemstring|ItemStack", "Check that player "..
-				"inventory or world position contains specified item. Optionally restricting to named inventory list "..
-				"and optional slot number.")
+				"inventory, bare inventory, metadata or world position contains specified item." ..
+				" Optionally restricting to named inventory list and optional slot number.")
 			print("\nAssertions can be prefixed with is_ (default) or not_ modifiers.")
 			print("Special assertions are provided in addition to luassert builtin assertions.")
 			print("Most assertions accept one additional argument besides what has been")

@@ -249,7 +249,10 @@ end
 
 local function resolve_args_inv_list_slot_stack(a, b, c, d)
 	local inv
-	if mineunit_type(a) == "Player" then
+	local atype = mineunit_type(a)
+	if atype == "InvRef" then
+		inv = a
+	elseif atype == "Player" or atype == "MetaDataRef" then
 		inv = a:get_inventory()
 	elseif is_coordinate(a) then
 		inv = world.get_meta(a):get_inventory()
@@ -263,7 +266,11 @@ end
 
 local function formatname(thing)
 	local mtype = mineunit_type(thing)
-	if mtype == "Player" then
+	if mtype == "InvRef" then
+		return "InvRef" -- .. next(assert.is_table(rawget(thing, "_lists")))
+	elseif mtype == "MetaDataRef" then
+		return "MetaDataRef"
+	elseif mtype == "Player" then
 		return thing:get_player_name()
 	elseif mtype == "ItemStack" then
 		return thing:get_name()
@@ -275,6 +282,12 @@ local function formatname(thing)
 	error("formatname: unsupported thing")
 end
 
+-- has_item(InfRef, listname, slotnumber, itemstring|ItemStack)
+-- has_item(InfRef, listname, itemstring|ItemStack)
+-- has_item(InfRef, itemstring|ItemStack)
+-- has_item(MetaDataRef, listname, slotnumber, itemstring|ItemStack)
+-- has_item(MetaDataRef, listname, itemstring|ItemStack)
+-- has_item(MetaDataRef, itemstring|ItemStack)
 -- has_item(Player, listname, slotnumber, itemstring|ItemStack)
 -- has_item(Player, listname, itemstring|ItemStack)
 -- has_item(Player, itemstring|ItemStack)
