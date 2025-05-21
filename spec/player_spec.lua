@@ -417,6 +417,19 @@ describe("Mineunit Player", function()
 
 	end)
 
+end)
+
+describe("Core function", function()
+
+	require("mineunit")
+	mineunit:config_set("silence_global_export_overrides", true)
+	sourcefile("core")
+	sourcefile("itemstack")
+	sourcefile("entity")
+	sourcefile("player")
+
+	core.register_craftitem(":test", { description = "test" })
+
 	describe("core.check_player_privs (engine)", function()
 
 		-- For some reason engine returns empty string instead of empty table if no privileges missing.
@@ -498,6 +511,115 @@ describe("Mineunit Player", function()
 			local result, missing = core.check_player_privs(player, { p8b = true, p8d = true })
 			assert.equals(expected_result, result)
 			assert.same(expected_missing, missing)
+		end)
+
+	end)
+
+	describe("core.create_detached_inventory", function()
+
+		it("fails on missing name", function()
+			assert.error(function()
+				core.create_detached_inventory()
+			end)
+		end)
+
+		it("creates new inventory", function()
+			local inv1 = core.create_detached_inventory("new", nil, nil)
+			assert.is_InvRef(inv1)
+			local inv2 = core.create_detached_inventory("new", nil, nil)
+			assert.is_InvRef(inv2)
+			assert.not_equals(inv1, inv2)
+		end)
+
+	end)
+
+	describe("core.get_inventory (detached)", function()
+
+		setup(function()
+			local inv = core.create_detached_inventory("testinv", nil, nil)
+			assert.is_InvRef(inv)
+			inv:set_size("list1", 3)
+			inv:set_stack("list1", 2, "test")
+			assert.has_item(inv, "list1", 2, "test")
+		end)
+
+		it("fails on missing name", function()
+			assert.error(function()
+				core.get_inventory({ type = "detached" })
+			end)
+		end)
+
+		it("handles empty name", function()
+			local inv = core.get_inventory({ type = "detached", name = "" })
+			assert.is_nil(inv)
+		end)
+
+		it("returns inventory", function()
+			local inv = core.get_inventory({ type = "detached", name = "testinv" })
+			assert.is_InvRef(inv)
+			assert.has_item(inv, "test")
+		end)
+
+	end)
+
+	describe("core.get_inventory (player)", function()
+
+		it("fails on missing name", function()
+			assert.error(function()
+				core.get_inventory({ type = "player" })
+			end)
+		end)
+
+		it("handles empty name", function()
+			local inv = core.get_inventory({ type = "player", name = "" })
+			assert.is_nil(inv)
+		end)
+
+		it("handles noexistent inventory", function()
+			local inv = core.get_inventory({ type = "player", name = "doesntexist" })
+			assert.is_nil(inv)
+		end)
+
+		it("returns inventory", function()
+			local player = Player("Sam")
+			player:set_wielded_item("test")
+			local inv = core.get_inventory({ type = "player", name = "Sam" })
+			assert.is_InvRef(inv)
+			assert.has_item(inv, "test")
+		end)
+
+	end)
+
+	describe("core.remove_detached_inventory", function()
+
+		it("fails on missing name", function()
+			assert.error(function()
+				core.remove_detached_inventory()
+			end)
+		end)
+
+		it("fails on nil name", function()
+			assert.error(function()
+				core.remove_detached_inventory(nil)
+			end)
+		end)
+
+		it("handles empty name", function()
+			local inv = core.remove_detached_inventory("")
+			assert.is_false(inv)
+		end)
+
+		it("wont remove player inventory", function()
+			local player = Player("Sam")
+			player:set_wielded_item("test")
+			local inv = core.remove_detached_inventory("Sam")
+			assert.is_false(inv)
+			assert.has_item(player, "test")
+		end)
+
+		it("handles noexistent inventory", function()
+			local inv = core.remove_detached_inventory("doesntexist")
+			assert.is_false(inv)
 		end)
 
 	end)
