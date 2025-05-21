@@ -70,6 +70,41 @@ _G.core.get_mod_storage = function()
 	return mod_storage[modname]
 end
 
+-- Detached inventories
+local inv_storage = {}
+_G.core.get_inventory = function(where)
+	assert.is_hashed(where)
+	assert.is_string(where.name)
+	if where.type == "detached" then
+		return inv_storage[where.name]
+	elseif where.type == "node" then
+		assert.is_coordinate(where.pos)
+		local meta = core.get_meta(where.pos)
+		return meta and meta:get_inventory() or nil
+	elseif where.type == "player" then
+		local player = core.get_player_by_name(where.name)
+		return player and player:get_inventory() or nil
+	end
+	error("core.get_inventory(): Invalid inventory type")
+end
+_G.core.create_detached_inventory = function(name, callbacks, player_name)
+	assert.is_string(name)
+	mineunit:debugf("core.create_detached_inventory(): initializing new detached inventory '%s'", name)
+	if player_name then
+		mineunit:warningf("core.create_detached_inventory(): ignoring player_name '%s'", player_name)
+	end
+	inv_storage[name] = InvRef()
+	return inv_storage[name]
+end
+_G.core.remove_detached_inventory = function(name)
+	assert.is_string(name)
+	if inv_storage[name] then
+		inv_storage[name] = nil
+		return true
+	end
+	return false
+end
+
 _G.minetest.sound_play = noop
 _G.minetest.sound_stop = noop
 _G.minetest.sound_fade = noop
