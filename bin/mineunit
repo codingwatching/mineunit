@@ -39,8 +39,8 @@ local luaversion = (function()
 end)()
 mineunit_version_str = "Mineunit v" .. mineunit_version .. " (" .. luaversion .. ")"
 
-mineunit_conf_defaults = {}
-mineunit_conf_override = {}
+local mineunit_conf_defaults = {}
+local mineunit_conf_override = {}
 
 local pl = { path = require 'pl.path' }
 local lua_dofile = dofile
@@ -574,7 +574,10 @@ local outputHandlerLoader = require("busted.modules.output_handler_loader")()
 require("busted")(busted)
 local exit = require("busted.compatibility").exit
 
-mineunit = {}
+mineunit = {
+	mineunit_conf_defaults = mineunit_conf_defaults,
+	mineunit_conf_override = mineunit_conf_override,
+}
 
 -- Mineunit event subscriptions
 local internal_subs = {

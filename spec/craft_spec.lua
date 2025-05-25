@@ -11,8 +11,6 @@ describe("Craft API", function()
 	sourcefile("player")
 	fixture("items")
 
-	local CM = mineunit.CraftManager
-
 	minetest.register_craft({
 		output = 'bridge',
 		recipe = {

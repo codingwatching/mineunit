@@ -3,11 +3,6 @@ local CM = mineunit('craftmanager')
 
 mineunit.CraftManager = CM
 
--- TODO: Remove this one, still exposed just to avoid breaking too much at once
-function mineunit.registered_craft_recipe(output, method)
-	return CM:registered_craft_recipe(output, method)
-end
-
 function core.get_all_craft_recipes(output)
 	assert.is_string(output, "core.get_all_craft_recipes(output): invalid output type, expected string")
 	local results = {}
@@ -54,61 +49,74 @@ local function has_groups(thing)
 	return false
 end
 
+local fn_register = {}
+
+function fn_register.shaped(t)
+	assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
+	assert.is_indexed(t.recipe, "core.register_craft: t.recipe indexed array expected, got %s")
+	assert.is_true(#t.recipe > 0, "core.register_craft: expected t.recipe to contain at least one item")
+	for i, row in ipairs(t.recipe) do
+		assert.is_indexed(row, "core.register_craft: t.recipe["..i.."] indexed array expected, got %s")
+		assert.is_true(#row > 0, "core.register_craft: expected t.recipe["..i.."] to contain at least one item")
+	end
+	if t.replacements ~= nil then
+		assert.is_table(t.replacements)
+	end
+	local groups = has_groups(t.recipe)
+	CM:registerCraft("shaped", groups and "PRIORITY_SHAPED_AND_GROUPS" or "PRIORITY_SHAPED", t.output, t)
+end
+
+function fn_register.shapeless(t)
+	assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
+	assert.is_indexed(t.recipe, "core.register_craft: t.recipe indexed array expected, got %s")
+	assert.is_true(#t.recipe > 0, "core.register_craft: expected t.recipe to contain at least one item")
+	if t.replacements ~= nil then
+		assert.is_table(t.replacements)
+	end
+	local groups = has_groups(t.recipe)
+	CM:registerCraft("shapeless", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", t.output, t)
+end
+
+function fn_register.toolrepair(t)
+	if t.additional_wear ~= nil then
+		assert.is_number(t.additional_wear,
+			"core.register_craft: t.additional_wear number expected, got " .. type(t.additional_wear)
+		)
+	end
+	mineunit:warning("RECIPE TYPE toolrepair NOT REGISTERED", dump(t))
+	-- TODO: Store registered toolrepair recipes
+	--CM:registerCraft("toolrepair", error("TODO"), t.output, t)
+end
+
+function fn_register.cooking(t)
+	assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
+	assert.is_itemname(t.recipe, "core.register_craft: t.recipe item name expected, got %s")
+	if t.cooktime ~= nil then
+		assert.is_number(t.cooktime, "core.register_craft: t.cooktime number expected, got " .. type(t.cooktime))
+	end
+	t.cooktime = t.cooktime or 3
+	if t.replacements then
+		assert.is_indexed(t.replacements, "core.register_craft: t.replacements indexed table expected, got %s")
+	end
+	local groups = has_groups(t.recipe)
+	CM:registerCraft("cooking", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", t.output, t)
+end
+
+function fn_register.fuel(t)
+	assert.is_string(t.recipe, "core.register_craft: t.recipe string expected, got " .. type(t.recipe))
+	if t.burntime ~= nil then
+		assert.is_number(t.burntime, "core.register_craft: t.burntime number expected, got " .. type(t.burntime))
+	end
+	t.burntime = t.burntime or 1
+	local groups = has_groups(t.recipe)
+	CM:registerCraft("fuel", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", "", t)
+end
+
+
 function core.register_craft(t)
 	assert.is_table(t, "core.register_craft: table expected, got %s")
 	t.type = t.type or "shaped"
-	if t.type == "shaped" then
-		assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
-		assert.is_indexed(t.recipe, "core.register_craft: t.recipe indexed array expected, got %s")
-		assert.is_true(#t.recipe > 0, "core.register_craft: expected t.recipe to contain at least one item")
-		for i, row in ipairs(t.recipe) do
-			assert.is_indexed(row, "core.register_craft: t.recipe["..i.."] indexed array expected, got %s")
-			assert.is_true(#row > 0, "core.register_craft: expected t.recipe["..i.."] to contain at least one item")
-		end
-		if t.replacements ~= nil then
-			-- assert.is_table(t.replacements)
-		end
-		local groups = has_groups(t.recipe)
-		CM:registerCraft("shaped", groups and "PRIORITY_SHAPED_AND_GROUPS" or "PRIORITY_SHAPED", t.output, t)
-	elseif t.type == "shapeless" then
-		assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
-		assert.is_indexed(t.recipe, "core.register_craft: t.recipe indexed array expected, got %s")
-		assert.is_true(#t.recipe > 0)
-		if t.replacements ~= nil then
-			-- assert.is_table(t.replacements)
-		end
-		local groups = has_groups(t.recipe)
-		CM:registerCraft("shapeless", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", t.output, t)
-	elseif t.type == "toolrepair" then
-		if t.additional_wear ~= nil then
-			assert.is_number(t.additional_wear, "core.register_craft: t.additional_wear number expected, got " .. type(t.additional_wear))
-		end
-		mineunit:warning("RECIPE TYPE toolrepair NOT REGISTERED", dump(t))
-		-- TODO: Store registered toolrepair recipes
-		--CM:registerCraft("toolrepair", error("TODO"), t.output, t)
-	elseif t.type == "cooking" then
-		assert.is_itemstring(t.output, "core.register_craft: t.output item name expected, got %s")
-		assert.is_itemname(t.recipe, "core.register_craft: t.recipe item name expected, got %s")
-		if t.cooktime ~= nil then
-			assert.is_number(t.cooktime, "core.register_craft: t.cooktime number expected, got " .. type(t.cooktime))
-		end
-		t.cooktime = t.cooktime or 3
-		if t.replacements then
-			assert.is_indexed(t.replacements, "core.register_craft: t.replacements indexed table expected, got %s")
-		end
-		local groups = has_groups(t.recipe)
-		CM:registerCraft("cooking", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", t.output, t)
-	elseif t.type == "fuel" then
-		assert.is_string(t.recipe, "core.register_craft: t.recipe string expected, got " .. type(t.recipe))
-		if t.burntime ~= nil then
-			assert.is_number(t.burntime, "core.register_craft: t.burntime number expected, got " .. type(t.burntime))
-		end
-		t.burntime = t.burntime or 1
-		local groups = has_groups(t.recipe)
-		CM:registerCraft("fuel", groups and "PRIORITY_SHAPELESS_AND_GROUPS" or "PRIORITY_SHAPELESS", "", t)
-	else
-		error("Recipe type not supported: " .. tostring(t.type))
-	end
+	assert.is_function(fn_register[t.type], "Recipe type not supported: " .. tostring(t.type))(t)
 end
 
 function core.clear_craft(t)

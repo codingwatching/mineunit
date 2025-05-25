@@ -159,7 +159,7 @@ end
 -- @unsigned limit = 0
 -- @return \CraftDefinition[]
 function CraftManager:getCraftRecipes(output, limit)
-	limit = limit or 0
+	--limit = limit or 0
 end
 
 -- @CraftOutput output

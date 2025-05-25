@@ -195,7 +195,9 @@ register_basic_assert("hashed", 1, function(args) return tabletype(args[1]) == "
 
 register_positive_fmt("integer", "Expected %s to be an integer")
 register_negative_fmt("integer", "Expected %s to not be an integer")
-register_basic_assert("integer", 1, function(args) return type(args[1]) == "number" and args[1] == math.floor(args[1]) end)
+register_basic_assert("integer", 1, function(args)
+	return type(args[1]) == "number" and args[1] == math.floor(args[1])
+end)
 
 register_positive_fmt("gt", "Expected %s to be greater than %s")
 register_negative_fmt("gt", "Expected %s to not be greater than %s")

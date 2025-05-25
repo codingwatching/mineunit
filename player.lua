@@ -74,19 +74,6 @@ function _G.core.get_connected_players()
 	return result
 end
 
-local client_state = {
-	"Invalid",
-	"Disconnecting",
-	"Denied",
-	"Created",
-	"AwaitingInit2",
-	"HelloSent",
-	"InitDone",
-	"DefinitionsSent",
-	"Active",
-	"SudoMode",
-}
-
 function _G.core.get_player_information(name)
 	local player = core.get_player_by_name(name)
 	if not player then
@@ -119,6 +106,18 @@ function _G.core.get_player_information(name)
 	result.lang_code = "EN"
 
 	if mineunit:config("server_debug") then
+		--[[local ClientState = {
+			Invalid = 1,
+			Disconnecting = 2,
+			Denied = 3,
+			Created = 4,
+			AwaitingInit2 = 5,
+			HelloSent = 6,
+			InitDone = 7,
+			DefinitionsSent = 8,
+			Active = 9,
+			SudoMode = 10,
+		}--]]
 		result.serialization_version = 28 -- number
 		result.major = 5
 		result.minor = 4
