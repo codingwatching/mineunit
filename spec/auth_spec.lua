@@ -9,8 +9,6 @@ describe("Mineunit auth", function()
 	sourcefile("player")
 	mineunit("auth")
 
-	local SX = Player("SX")
-
 	it("creates new entry with mineunit:create_auth(data)", function()
 		mineunit:config_set("singleplayer", false)
 		local auth_data = {
@@ -35,7 +33,7 @@ describe("Mineunit auth", function()
 		mineunit:config_set("singleplayer", false)
 		-- New Player instance
 		spy.on(mineunit, "create_auth")
-		local player = Player("auth-p2", { priv31 = true, priv32 = true })
+		Player("auth-p2", { priv31 = true, priv32 = true })
 		assert.spy(mineunit.create_auth).called()
 		-- Read auth entry
 		local auth_handler = core.get_auth_handler()
@@ -70,7 +68,7 @@ describe("Mineunit auth", function()
 		mineunit:config_set("singleplayer", true)
 		-- New Player instance
 		spy.on(mineunit, "create_auth")
-		local player = Player("auth-p4", { priv41 = true, priv42 = true })
+		Player("auth-p4", { priv41 = true, priv42 = true })
 		assert.spy(mineunit.create_auth).called()
 		-- Read auth entry
 		local auth_handler = core.get_auth_handler()

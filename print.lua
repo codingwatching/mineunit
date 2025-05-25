@@ -24,6 +24,7 @@ end
 local formatters = {
 	["nil"] = tostring,
 	["xnil"] = tostring,
+	--luacheck: push ignore 561 cyclomatic complexity
 	["table"] = function(thing)
 		local above = rawget(thing, "above")
 		local under = rawget(thing, "under")
@@ -47,6 +48,7 @@ local formatters = {
 		end
 		return tostring(thing)
 	end,
+	--luacheck: pop
 	["xtable"] = tostring,
 	["number"] = tostring,
 	["xnumber"] = tostring,

@@ -176,12 +176,6 @@ mineunit.export_object(LuaEntity, {
 
 local EntitySAO = {}
 
-local last_unique_id = -1
-local function unique_id()
-	last_unique_id = last_unique_id + 1
-	return last_unique_id
-end
-
 function EntitySAO:get_luaentity()
 	return self._luaentity
 end

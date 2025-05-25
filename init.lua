@@ -25,14 +25,17 @@ local default_config = {
 	time_step = -1,
 	engine_version = "mineunit",
 	deprecated = "throw",
+	deprecated_mineunit = "error",
 	singleplayer = true
 }
 
-for k,v in pairs(mineunit_conf_defaults or {}) do
+mineunit = mineunit or {}
+local mineunit_conf_override = rawget(mineunit, "mineunit_conf_override") or {}
+for k,v in pairs(rawget(mineunit, "mineunit_conf_defaults") or {}) do
 	default_config[k] = v
 end
+rawset(mineunit, "mineunit_conf_defaults", nil)
 
-mineunit = mineunit or {}
 mineunit._config = {
 	modpaths = {},
 }
@@ -81,14 +84,6 @@ setmetatable(mineunit, {
 		return unpack(_mineunits[name])
 	end,
 })
-
-if mineunit_config then
-	for key in pairs(default_config) do
-		if mineunit_config[key] ~= nil then
-			mineunit._config[key] = mineunit_config[key]
-		end
-	end
-end
 
 function mineunit:has_module(name)
 	return _mineunits[name] and true
@@ -229,17 +224,20 @@ function sourcefile(name)
 	return dofile(path)
 end
 
-function mineunit:DEPRECATED(msg)
-	local action = self:config("deprecated")
+local function DEPRECATED(instance, action, msg)
 	if action == "ignore" then
 		return
 	elseif action == "throw" then
 		error(msg or "Attempted to use deprecated method")
 	elseif ({debug=1,info=1,warning=1,error=1})[action] then
-		self[action](self, msg or "Calling deprecated engine method")
+		instance[action](instance, msg or "Calling deprecated engine method")
 	else
 		error("Config: invalid value for 'deprecated'. Allowed values: throw, error, warning, info, debug, ignore.")
 	end
+end
+
+function mineunit:DEPRECATED(msg)
+	return DEPRECATED(self, self:config("deprecated"), msg)
 end
 
 function mineunit.export_object(obj, def)
@@ -263,8 +261,6 @@ end
 
 mineunit.utils = mineunit("assert")
 local sequential = mineunit.utils.sequential
--- FIXME: Required for some existing tests
-count = mineunit.utils.count
 
 function mineunit.deep_merge(data, target, defaults)
 	if sequential(data) and #data > 0 then
@@ -360,16 +356,8 @@ end
 mineunit._config["original_modname"] = mineunit:config("modname")
 mineunit:set_modpath(mineunit:config("modname"), mineunit:config("root"))
 
-function timeit(count, func, ...)
-	local socket = require 'socket'
-	local t1 = socket.gettime() * 1000
-	for i=0,count do
-		func(...)
-	end
-	local diff = (socket.gettime() * 1000) - t1
-	local info = debug.getinfo(func,'S')
-	mineunit:info(("\nTimeit: %s:%d took %d ticks"):format(info.short_src, info.linedefined, diff))
-	return diff, info
-end
+mineunit("deprecation")(function(msg)
+	return DEPRECATED(mineunit, mineunit:config("deprecated_mineunit"), msg)
+end)
 
 mineunit:info("Mineunit initialized, current modname is", mineunit:get_current_modname())

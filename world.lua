@@ -140,6 +140,27 @@ local function has_meta(pos)
 	end
 end
 
+local function insert_pos_by_nodename(results, filternames, pos)
+	local node = minetest.get_node_or_nil(pos)
+	if node and node.name and filternames[node.name] then
+		if not results[node.name] then
+			results[node.name] = {}
+		end
+		table.insert(results[node.name], pos)
+	end
+end
+
+local function insert_pos_and_counts_by_nodename(positions, counts, filternames, pos)
+	local node = minetest.get_node_or_nil(pos)
+	if node and node.name and filternames[node.name] then
+		table.insert(positions, pos)
+		if not counts[node.name] then
+			counts[node.name] = 1
+		end
+		counts[node.name] = counts[node.name] + 1
+	end
+end
+
 -- FIXME: Does not handle node groups at all, groups are completely ignored
 function world.find_nodes_in_area(p1, p2, nodenames, grouped)
 	assert.is_table(p1, "Invalid p1, table expected")
@@ -164,14 +185,7 @@ function world.find_nodes_in_area(p1, p2, nodenames, grouped)
 		for x = sx, ex do
 			for y = sy, ey do
 				for z = sz, ez do
-					local pos = {x=x, y=y, z=z}
-					local node = minetest.get_node_or_nil(pos)
-					if node and node.name and names[node.name] then
-						if not results[node.name] then
-							results[node.name] = {}
-						end
-						table.insert(results[node.name], pos)
-					end
+					insert_pos_by_nodename(results, names, {x=x, y=y, z=z})
 				end
 			end
 		end
@@ -182,21 +196,12 @@ function world.find_nodes_in_area(p1, p2, nodenames, grouped)
 		for x = sx, ex do
 			for y = sy, ey do
 				for z = sz, ez do
-					local pos = {x=x, y=y, z=z}
-					local node = minetest.get_node_or_nil(pos)
-					if node and node.name and names[node.name] then
-						table.insert(positions, pos)
-						if not counts[node.name] then
-							counts[node.name] = 1
-						end
-						counts[node.name] = counts[node.name] + 1
-					end
+					insert_pos_and_counts_by_nodename(positions, counts, names, {x=x, y=y, z=z})
 				end
 			end
 		end
 		return positions, counts
 	end
-	error("world.find_nodes_in_area unexpected error (yes, bug)")
 end
 
 function world.find_nodes_with_meta(p1, p2)
