@@ -8,7 +8,9 @@ describe("ItemStack", function()
 	mineunit:config_set("silence_global_export_overrides", true)
 	sourcefile("itemstack")
 
+	--luacheck:push ignore 122 setting read-only field
 	core.registered_items = {
+	--luacheck:pop
 		test = { stack_max = 100 }
 	}
 

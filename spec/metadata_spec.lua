@@ -9,7 +9,9 @@ describe("NodeMetaRef", function()
 	sourcefile("itemstack")
 	sourcefile("metadata")
 
+	--luacheck:push ignore 122 setting read-only field
 	core.registered_items = {
+	--luacheck:pop
 		test = { stack_max = 100 },
 		foo = { stack_max = 50 }
 	}

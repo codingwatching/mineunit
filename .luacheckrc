@@ -28,13 +28,32 @@ files["./jit-p.lua"].ignore = { "561" }
 files["./assert.lua"].globals = { "type" }
 files["./init.lua"].globals = { "mineunit", "fixture", "fixture_path", "sourcefile", }
 files["./globals.lua"].globals = { "INIT", "PLATFORM", "DIR_DELIM" }
-files["./globals.lua"].read_globals = Writable{ mineunit = { "set_timeofday" } }
+files["./globals.lua"].read_globals = Writable{
+	mineunit = {
+		"utils",
+		"set_timeofday"
+	},
+}
 files["./settings.lua"].read_globals = Writable{ mineunit = { "apply_default_settings" } }
 files["./auth.lua"].read_globals = Writable{ mineunit = { "create_auth" } }
-files["./craft.lua"].read_globals = Writable{ mineunit = { "CraftManager" } }
+files["./craft.lua"].read_globals = Writable{
+	mineunit = { "CraftManager" },
+	core = {
+		"get_all_craft_recipes",
+		"register_craft",
+		"clear_craft",
+		"get_craft_result",
+	}
+}
 files["./player.lua"].read_globals = Writable{ mineunit = { "get_players" } }
 files["./entity.lua"].read_globals = Writable{ mineunit = { "get_entities" } }
-files["./protection.lua"].read_globals = Writable{ mineunit = { "protect" } }
+files["./protection.lua"].read_globals = Writable{
+	mineunit = { "protect" },
+	core = {
+		"is_protected",
+		"record_protection_violation",
+	}
+}
 files["./print.lua"].globals = { "dump" }
 files["./print.lua"].read_globals = Writable{
 	mineunit = {
@@ -72,23 +91,30 @@ files["./metadata.lua"].read_globals = Writable{
 		"clear_InvRef",
 	}
 }
-files["./http.lua"].read_globals = Writable{ mineunit = { "http_server" } }
+files["./http.lua"].read_globals = Writable{
+	mineunit = { "http_server" },
+	core = { "request_http_api" },
+}
 files["./fs.lua"].read_globals = Writable{
 	mineunit = {
 		"fs_reset",
 		"fs_copy",
 		"fs_getfile",
 		"fs_raw"
+	},
+	core = {
+		"mkdir",
+		"get_dir_list",
 	}
 }
 
 files["./core.lua"].globals = { "world" }
-files["./voxelmanip.lua"].read_globals = Writable{ world = { "nodes" } }
+files["./voxelmanip.lua"].read_globals = Writable{
+	world = { "nodes" },
+	core = { "get_voxel_manip" },
+}
 
 globals = {
-	-- Engine
-	"core", "minetest", "vector", "dump2",
-
 	-- MTG
 	"default",
 }
@@ -168,26 +194,31 @@ read_globals = {
 		-- subtables and other objects
 		CraftManager = {},
 		utils = { fields = {
-			"sequential", -- function (t)
 			"count", -- function (t)
-			"tabletype", -- function (t)
-			"in_array", -- function (t, value)
-			"round", -- function (value)
-			"is_coordinate", -- function (thing)
-			"is_valid_name", -- function (name)
 			"format_coordinate", -- function (t)
 			--"has_item", -- assertion validator, should probably be removed
-			"type", -- function (thing)
+			"in_array", -- function (t, value)
+			"is_coordinate", -- function (thing)
+			"is_valid_name", -- function (name)
 			"luatype", -- function (thing)
+			"noop", -- function (...)
+			"round", -- function (value)
+			"sequential", -- function (t)
+			"tabletype", -- function (t)
+			"type", -- function (thing)
 		}}
 	}},
 	"world",
 	"NodeTimerRef", "MetaDataRef", "NodeMetaRef", "ObjectRef", "InvRef", "Player",
 
 	-- Engine
+	"core", "minetest",
+
 	"INIT", "PLATFORM", "DIR_DELIM",
 	string = {fields = {"split", "trim"}},
 	table = {fields = {"copy", "getn", "indexof", "insert_all", "key_value_swap", "shuffle"}},
 	math = {fields = {"hypot", "sign", "factorial"}},
+	vector = {fields = {"new", "add", "subtract", "direction", "round", "floor", "divide", "multiply", "sort"}},
 	"PseudoRandom", "ItemStack", "VoxelArea", "VoxelManip", "Settings",
+
 }

@@ -10,9 +10,39 @@ jobs:
       with:
         path: mineunit
     - id: mineunit
-      uses: mt-mods/mineunit-actions@master
+      name: mineunit
+      uses: mt-mods/mineunit-actions@dev
       with:
         working-directory: mineunit
+    - id: mineunit541
+      name: mineunit 5.4.1
+      uses: mt-mods/mineunit-actions@dev
+      with:
+        coverage: false
+        mineunit-args: --engine-version 5.4.1
+        working-directory: mineunit
+    - id: mineunit551
+      name: mineunit 5.5.1
+      uses: mt-mods/mineunit-actions@dev
+      with:
+        coverage: false
+        mineunit-args: --engine-version 5.5.1
+        working-directory: mineunit
+    - id: mineunit561
+      name: mineunit 5.6.1
+      uses: mt-mods/mineunit-actions@dev
+      with:
+        coverage: false
+        mineunit-args: --engine-version 5.6.1
+        working-directory: mineunit
+    - id: mineunit570
+      name: mineunit 5.7.0
+      uses: mt-mods/mineunit-actions@dev
+      with:
+        coverage: false
+        mineunit-args: --engine-version 5.7.0
+        working-directory: mineunit
+
     - uses: RubbaBoy/BYOB@v1.3.0
       if: success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
       with:
@@ -21,8 +51,9 @@ jobs:
         STATUS: "${{ steps.mineunit.outputs.badge-status }}"
         COLOR: "${{ steps.mineunit.outputs.badge-color }}"
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     - uses: KeisukeYamashita/create-comment@v1
-      if: failure() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      if: failure() && steps.mineunit.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
       with:
         check-only-first-line: true
         comment: |
@@ -30,6 +61,43 @@ jobs:
           ```
           ${{ steps.mineunit.outputs.mineunit-stdout }}
           ```
+    - uses: KeisukeYamashita/create-comment@v1
+      if: failure() && steps.mineunit541.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          ## Some tests failed, test log follows:
+          ```
+          ${{ steps.mineunit541.outputs.mineunit-stdout }}
+          ```
+    - uses: KeisukeYamashita/create-comment@v1
+      if: failure() && steps.mineunit551.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          ## Some tests failed, test log follows:
+          ```
+          ${{ steps.mineunit551.outputs.mineunit-stdout }}
+          ```
+    - uses: KeisukeYamashita/create-comment@v1
+      if: failure() && steps.mineunit561.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          ## Some tests failed, test log follows:
+          ```
+          ${{ steps.mineunit561.outputs.mineunit-stdout }}
+          ```
+    - uses: KeisukeYamashita/create-comment@v1
+      if: failure() && steps.mineunit570.conclusion == 'failure' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+      with:
+        check-only-first-line: true
+        comment: |
+          ## Some tests failed, test log follows:
+          ```
+          ${{ steps.mineunit570.outputs.mineunit-stdout }}
+          ```
+
     - uses: KeisukeYamashita/create-comment@v1
       if: success() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
       with:
