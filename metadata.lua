@@ -11,13 +11,13 @@ end
 local function get_integer(value, msg)
 	local number = tonumber(value)
 	if number == nil then
-		error(msg.."Expected number, got: "..tostring(value))
+		error(msg.." Expected number, got: "..tostring(value))
 	elseif type(number) ~= "number" then
-		mineunit:warning(msg.."Expected number, got: "..type(value))
+		mineunit:warningf("%s Expected number, got: %s", msg, type(value))
 	end
 	local integer = math.floor(number)
 	if number ~= integer then
-		mineunit:warning(msg.."Expected integer, got: "..tostring(value))
+		mineunit:warningf("%s Expected integer, got: %s", msg, value)
 	end
 	return integer
 end
@@ -58,9 +58,9 @@ end
 -- * `set_size(listname, size)`: set size of a list
 --    * returns `false` on error (e.g. invalid `listname` or `size`)
 function InvRef:set_size(listname, size)
-	local newsize = get_integer(size, "InvRef:set_size: ")
+	local newsize = get_integer(size, "InvRef:set_size:")
 	if newsize < 0 then
-		mineunit:warning("InvRef:set_size: Invalid size: "..tostring(size))
+		mineunit:warningf("InvRef:set_size: Invalid size: '%s'", size)
 		return false
 	elseif newsize == 0 then
 		self._lists[listname] = nil
@@ -127,7 +127,7 @@ end
 -- * `get_list(listname)`: return full list
 function InvRef:get_list(listname)
 	if not self._lists[listname] then
-		mineunit:warning("InvRef:get_list list not found: "..tostring(listname))
+		mineunit:warningf("InvRef:get_list list not found: '%s'", listname)
 		return nil
 	end
 	local result = {}

@@ -51,6 +51,7 @@ require("mineunit.print")
 require("mineunit.globals")
 
 local function require_mineunit(name, root, tag)
+	mineunit:debugf("Loading mineunit module %s", name)
 	local modulename = name:gsub("/", ".")
 	if root and tag and tag ~= "mineunit" then
 		local path = name:match("^([^/]+)/")
@@ -58,15 +59,15 @@ local function require_mineunit(name, root, tag)
 			local oldpath = package.path
 			local module
 			package.path = root.."/"..tag.."/?.lua;"
-			mineunit:debug("Loading "..name.." from "..tag)
+			mineunit:debugf("Loading %s from %s", name, tag)
 			local success, err = pcall(function() module = require(modulename) end)
 			package.path = oldpath
 			if success then
-				mineunit:debug("Loaded "..name.." from "..tag)
+				mineunit:debugf("Loaded %s from %s", name, tag)
 				return module
 			else
 				mineunit:debug(err)
-				mineunit:error("Loading "..name.." from "..tag.." failed, trying builtin")
+				mineunit:errorf("Loading %s from %s failed, trying builtin", name, tag)
 			end
 		end
 	end
@@ -78,7 +79,6 @@ local _mineunits = {}
 setmetatable(mineunit, {
 	__call = function(self, name)
 		if _mineunits[name] == nil then
-			mineunit:debug("Loading mineunit module", name)
 			_mineunits[name] = {require_mineunit(name, mineunit:config("core_root"), mineunit:config("engine_version"))}
 		end
 		return unpack(_mineunits[name])
@@ -90,7 +90,7 @@ function mineunit:has_module(name)
 end
 
 function mineunit:config_set(key, value)
-	self:debug("Updating configuration", key, self._config[key], " -> ", value)
+	self:debugf("Updating configuration '%s' from '%s' to '%s'", key, self._config[key], value)
 	self._config[key] = value
 end
 
@@ -107,7 +107,7 @@ mineunit._config.source_path = pl.path.normpath(
 
 function mineunit:set_modpath(name, path)
 	path = pl.path.normpath(path)
-	mineunit:info("Setting modpath", name, path)
+	mineunit:infof("Setting modpath of '%s' to '%s'", name, path)
 	self._config.modpaths[name] = path
 end
 
@@ -143,7 +143,7 @@ function mineunit:mods_loaded()
 	if self._on_mods_loaded then
 		mineunit:info("Executing register_on_mods_loaded functions")
 		if self._on_mods_loaded_exec_count > 0 then
-			mineunit:warning("mineunit:mods_loaded: Callbacks already executed " .. self._on_mods_loaded_exec_count .. " times")
+			mineunit:warningf("mineunit:mods_loaded: Callbacks already executed %d times", self._on_mods_loaded_exec_count)
 		end
 		if core.registered_on_mods_loaded then
 			for index, func in ipairs(core.registered_on_mods_loaded) do
@@ -167,10 +167,10 @@ end
 local function spec_path(name)
 	local path = pl.path.normpath(("%s/%s/%s"):format(mineunit:config("root"), mineunit:config("spec_path"), name))
 	if pl.path.isfile(path) then
-		mineunit:debug("spec_path", path)
+		mineunit:debugf("spec_path('%s') -> '%s'", name, path)
 		return path
 	end
-	mineunit:debug("spec_path, file not found:", path)
+	mineunit:debugf("spec_path, file not found: '%s'", path)
 end
 
 function fixture_path(name)
@@ -187,11 +187,11 @@ function fixture_path(name)
 		if pl.path.isfile(path) then
 			return path
 		else
-			mineunit:debug("fixture_path, file not found:", path)
+			mineunit:debugf("fixture_path, file not found: '%s'", path)
 		end
 	end
 	local path = pl.path.normpath(("%s/%s/%s"):format(root, search_paths[1], name))
-	mineunit:info("File not found:", path)
+	mineunit:infof("File not found: '%s'", path)
 	return path
 end
 
@@ -199,13 +199,13 @@ local _fixtures = {}
 function fixture(name)
 	local path = fixture_path(name .. ".lua")
 	if not _fixtures[name] then
-		mineunit:info("Loading fixture", path)
+		mineunit:infof("Loading fixture %s", path)
 		assert(pl.path.isfile(path), "Fixture not found: " .. path)
 		local result = {dofile(path)}
 		_fixtures[name] = result
 		return unpack(result)
 	else
-		mineunit:debug("Fixture already loaded", path)
+		mineunit:debugf("Fixture already loaded: %s", path)
 		return unpack(_fixtures[name])
 	end
 end
@@ -213,13 +213,13 @@ end
 local function source_path(name)
 	local cfg_source_path = mineunit:config("source_path")
 	local path = pl.path.normpath(("%s/%s"):format(cfg_source_path, name))
-	mineunit:debug("source_path", path)
+	mineunit:debugf("source_path('%s') -> '%s'", name, path)
 	return path
 end
 
 function sourcefile(name)
 	local path = source_path(name .. ".lua")
-	mineunit:info("Loading source", path)
+	mineunit:infof("Loading source %s", path)
 	assert(pl.path.isfile(path), "Source file not found: " .. path)
 	return dofile(path)
 end
@@ -275,9 +275,9 @@ function mineunit.deep_merge(data, target, defaults)
 			assert(type(value) ~= "table", "Configuration: tables not supported in indexed arrays")
 			if not seen[value] then
 				table.insert(target, value)
-				mineunit:debug("\t", #target, " = ", tostring(value))
+				mineunit:debugf("\t%d\t=\t'%s'", #target, value)
 			else
-				mineunit:debug("\tSkipping duplicate value: ", tostring(value))
+				mineunit:debugf("\tSkipping duplicate value: %s", value)
 			end
 		end
 	else
@@ -287,15 +287,15 @@ function mineunit.deep_merge(data, target, defaults)
 				assert(type(value) == type(defaults[key]), "Configuration: invalid data type for key", key)
 				if type(value) == "table" then
 					target[key] = {}
-					mineunit:debug("Configuration: merging indexed array", key)
+					mineunit:debugf("Configuration: merging indexed array at '%s'", key)
 					mineunit.deep_merge(value, target[key], defaults[key])
 				else
 					target[key] = value
 				end
-				mineunit:debug("Configuration: ", key, tostring(value))
+				mineunit:debugf("Configuration: '%s' = '%s'", key, value)
 			elseif key ~= "exclude" then
 				-- Excluding "exclude" is hack and on todo list, mineunit cli runner uses this configuration key
-				mineunit:warning("Configuration: invalid key", key)
+				mineunit:warningf("Configuration: invalid key '%s'", key)
 			end
 		end
 	end
@@ -304,7 +304,7 @@ end
 do -- Read mineunit config file
 	local configpath = spec_path("mineunit.conf")
 	if not configpath then
-		mineunit:info("configpath, file not found:", configpath)
+		mineunit:infof("configpath, file not found: '%s'", configpath)
 	end
 	if configpath then
 		local configfile, err = loadfile(configpath)
@@ -319,9 +319,9 @@ do -- Read mineunit config file
 					mineunit._config[k] = v
 				end
 			end
-			mineunit:info("Mineunit configuration loaded from", configpath)
+			mineunit:infof("Mineunit configuration loaded from '%s'", configpath)
 		else
-			mineunit:warning("Mineunit configuration failed: " .. err)
+			mineunit:warningf("Mineunit configuration failed: %s", err)
 		end
 	else
 		mineunit:warning("Mineunit configuration file not found")
@@ -331,7 +331,7 @@ end
 do -- Read mod.conf config file
 	local modconfpath = source_path("mod.conf")
 	if not modconfpath then
-		mineunit:info("mod.conf not found:", modconfpath)
+		mineunit:infof("mod.conf not found: '%s'", modconfpath)
 		return
 	end
 	local configfile = io.open(modconfpath, "r")
@@ -346,7 +346,7 @@ do -- Read mod.conf config file
 				end
 			end
 		end
-		mineunit:info("Mod configuration loaded from", modconfpath)
+		mineunit:infof("Mod configuration loaded from '%s'", modconfpath)
 	else
 		mineunit:warning("Loading file mod.conf failed")
 	end
@@ -360,4 +360,4 @@ mineunit("deprecation")(function(msg)
 	return DEPRECATED(mineunit, mineunit:config("deprecated_mineunit"), msg)
 end)
 
-mineunit:info("Mineunit initialized, current modname is", mineunit:get_current_modname())
+mineunit:infof("Mineunit initialized, current modname is %s", mineunit:get_current_modname())

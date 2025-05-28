@@ -142,7 +142,7 @@ function CraftManager:getCraftResult(input, decrementInput)
 						output = out
 						priority_best = priority
 					else
-						mineunit:warning("trying to craft non-existent " .. out.item .. ", ignoring recipe")
+						mineunit:warningf("Trying to craft non-existent '%s', ignoring recipe", out.item)
 					end
 				end
 			end

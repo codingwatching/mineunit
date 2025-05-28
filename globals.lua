@@ -22,7 +22,8 @@ _G.core = core
 
 function core.get_builtin_path()
 	local tag = mineunit:config("engine_version")
-	return tag ~= "mineunit" and mineunit:config("core_root") .. "/" .. tag or mineunit:config("mineunit_path")
+	return (tag == "mineunit" and mineunit:config("mineunit_path")
+		or mineunit:config("core_root") .. DIR_DELIM .. tag) .. DIR_DELIM
 end
 
 function core.global_exists(name)
