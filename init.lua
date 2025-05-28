@@ -259,7 +259,6 @@ function mineunit.export_object(obj, def)
 	end
 end
 
-mineunit.utils = mineunit("assert")
 local sequential = mineunit.utils.sequential
 
 function mineunit.deep_merge(data, target, defaults)

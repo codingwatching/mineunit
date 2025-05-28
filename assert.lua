@@ -2,6 +2,8 @@
 
 local lua_type = type
 
+local function noop() end
+
 local function mineunit_type(obj)
 	if lua_type(obj) == "table" then
 		return rawget(obj, "_mineunit_typename")
@@ -357,15 +359,16 @@ _G.assert = assert
 -- TODO: Something wrong with this
 
 return {
-	sequential = sequential,
 	count = count,
-	tabletype = tabletype,
-	in_array = in_array,
-	round = round,
-	is_coordinate = is_coordinate,
-	is_valid_name = is_valid_name,
 	format_coordinate = format_coordinate,
 	has_item = has_item,
-	type = mineunit_type,
+	in_array = in_array,
+	is_coordinate = is_coordinate,
+	is_valid_name = is_valid_name,
 	luatype = lua_type,
+	noop = noop,
+	round = round,
+	sequential = sequential,
+	tabletype = tabletype,
+	type = mineunit_type,
 }

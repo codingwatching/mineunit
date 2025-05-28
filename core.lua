@@ -1,25 +1,20 @@
-local function noop(...) end
+local noop = mineunit.utils.noop
 local noop_object = {
-	__call = function(self,...) return self end,
-	__index = function(...) return function(...)end end,
+	__call = function(self) return self end,
+	__index = function() return noop end,
 }
+local engine_version = mineunit:config("engine_version")
+local engine_version_minor = tonumber(engine_version:sub(3,3)) or -1
 
 mineunit("craft")
 mineunit("world")
 
-_G.core.is_singleplayer = function() return mineunit:config("singleplayer") end
 _G.core.notify_authentication_modified = noop
 
 _G.core.set_node = world.set_node
 _G.core.add_node = world.set_node
 _G.core.swap_node = world.swap_node
 
-_G.core.get_worldpath = function(...) return _G.mineunit:get_worldpath(...) end
-_G.core.get_modpath = function(...) return _G.mineunit:get_modpath(...) end
-_G.core.get_current_modname = function(...) return _G.mineunit:get_current_modname(...) end
-_G.core.register_item_raw = noop
-_G.core.unregister_item_raw = noop
-_G.core.register_alias_raw = noop
 _G.core.get_translator = function(...) return function(...) mineunit:debug(...) end end
 _G.core.set_http_api_lua = noop
 _G.core.inventorycube = function(img1, img2, img3)
@@ -39,11 +34,14 @@ mineunit:apply_default_settings(_G.core.settings)
 _G.core.register_on_joinplayer = noop
 _G.core.register_on_leaveplayer = noop
 
-_G.minetest.register_on_player_receive_fields = noop
+_G.core.register_on_player_receive_fields = noop
 
 mineunit("game/constants")
 mineunit("common/vector")
 mineunit("game/item")
+if engine_version_minor > 5 then
+	mineunit("game/misc_s")
+end
 mineunit("game/misc")
 mineunit("game/register")
 mineunit("common/misc_helpers")
@@ -52,10 +50,10 @@ mineunit("game/features")
 mineunit("common/serialize")
 mineunit("fs")
 
-assert(minetest.registered_nodes["air"])
-assert(minetest.registered_nodes["ignore"])
-assert(minetest.registered_items[""])
-assert(minetest.registered_items["unknown"])
+assert(core.registered_nodes["air"])
+assert(core.registered_nodes["ignore"])
+assert(core.registered_items[""])
+assert(core.registered_items["unknown"])
 
 mineunit("metadata")
 mineunit("itemstack")
@@ -105,37 +103,37 @@ _G.core.remove_detached_inventory = function(name)
 	return false
 end
 
-_G.minetest.sound_play = noop
-_G.minetest.sound_stop = noop
-_G.minetest.sound_fade = noop
-_G.minetest.add_particlespawner = noop
+_G.core.sound_play = noop
+_G.core.sound_stop = noop
+_G.core.sound_fade = noop
+_G.core.add_particlespawner = noop
 
-_G.minetest.registered_chatcommands = {}
-_G.minetest.register_chatcommand = noop
-_G.minetest.chat_send_player = function(...) print(unpack({...})) end
-_G.minetest.chat_send_all = function(...) print(unpack({...})) end
-_G.minetest.register_on_placenode = noop
-_G.minetest.register_on_dignode = noop
-_G.minetest.register_on_mods_loaded = function(func) mineunit:register_on_mods_loaded(func) end
+_G.core.registered_chatcommands = {}
+_G.core.register_chatcommand = noop
+_G.core.chat_send_player = function(...) print(unpack({...})) end
+_G.core.chat_send_all = function(...) print(unpack({...})) end
+_G.core.register_on_placenode = noop
+_G.core.register_on_dignode = noop
+_G.core.register_on_mods_loaded = function(func) mineunit:register_on_mods_loaded(func) end
 
-_G.minetest.item_drop = noop
-_G.minetest.add_item = noop
-_G.minetest.check_for_falling = noop
-_G.minetest.get_objects_inside_radius = function(...) return {} end
+_G.core.item_drop = noop
+_G.core.add_item = noop
+_G.core.check_for_falling = noop
+_G.core.get_objects_inside_radius = function(...) return {} end
 
-_G.minetest.register_biome = noop
-_G.minetest.clear_registered_biomes = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
-_G.minetest.register_ore = noop
-_G.minetest.clear_registered_ores = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
-_G.minetest.register_decoration = noop
-_G.minetest.clear_registered_decorations = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
+_G.core.register_biome = noop
+_G.core.clear_registered_biomes = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
+_G.core.register_ore = noop
+_G.core.clear_registered_ores = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
+_G.core.register_decoration = noop
+_G.core.clear_registered_decorations = function(...) error("MINEUNIT UNSUPPORTED CORE METHOD") end
 
 do
 	local time_step = tonumber(mineunit:config("time_step"))
 	assert(time_step, "Invalid configuration value for time_step. Number expected.")
 	if time_step < 0 then
 		mineunit:info("Running default core.get_us_time using real world wall clock.")
-		_G.minetest.get_us_time = function()
+		_G.core.get_us_time = function()
 			local socket = require 'socket'
 			-- FIXME: Returns the time in seconds, relative to the origin of the universe.
 			return socket.gettime() * 1000 * 1000
@@ -143,31 +141,31 @@ do
 	else
 		mineunit:info("Running custom core.get_us_time with step increment: "..tostring(time_step))
 		local time_now = 0
-		_G.minetest.get_us_time = function()
+		_G.core.get_us_time = function()
 			time_now = time_now + time_step
 			return time_now
 		end
 	end
 end
 
-_G.minetest.after = noop
+_G.core.after = noop
 
-_G.minetest.find_nodes_with_meta = _G.world.find_nodes_with_meta
-_G.minetest.find_nodes_in_area = _G.world.find_nodes_in_area
-_G.minetest.get_node_or_nil = _G.world.get_node
-_G.minetest.get_node = function(pos) return minetest.get_node_or_nil(pos) or {name="ignore",param1=0,param2=0} end
-_G.minetest.dig_node = function(pos) return world.on_dig(pos) and true or false end
-_G.minetest.remove_node = _G.world.remove_node
-_G.minetest.load_area = noop
+_G.core.find_nodes_with_meta = _G.world.find_nodes_with_meta
+_G.core.find_nodes_in_area = _G.world.find_nodes_in_area
+_G.core.get_node_or_nil = _G.world.get_node
+_G.core.get_node = function(pos) return core.get_node_or_nil(pos) or {name="ignore",param1=0,param2=0} end
+_G.core.dig_node = function(pos) return world.on_dig(pos) and true or false end
+_G.core.remove_node = _G.world.remove_node
+_G.core.load_area = noop
 
-_G.minetest.get_node_timer = {}
-setmetatable(_G.minetest.get_node_timer, noop_object)
+_G.core.get_node_timer = {}
+setmetatable(_G.core.get_node_timer, noop_object)
 
 local content_name2id = {}
 local content_id2name = {}
-_G.minetest.get_content_id = function(name)
+_G.core.get_content_id = function(name)
 	-- check if the node exists
-	assert(minetest.registered_nodes[name], "node " .. name .. " is not registered")
+	assert(core.registered_nodes[name], "node " .. name .. " is not registered")
 
 	-- create and increment
 	if not content_name2id[name] then
@@ -177,7 +175,7 @@ _G.minetest.get_content_id = function(name)
 	return content_name2id[name]
 end
 
-_G.minetest.get_name_from_content_id = function(cid)
+_G.core.get_name_from_content_id = function(cid)
 	assert(content_id2name[cid+1], "Unknown content id")
 	return content_id2name[cid+1]
 end

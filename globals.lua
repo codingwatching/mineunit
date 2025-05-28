@@ -4,9 +4,11 @@
 -- https://github.com/minetest/minetest/blob/master/src/script/cpp_api/s_base.cpp
 -- https://github.com/minetest/minetest/blob/master/src/porting.h
 
--- Libraries
+-- Load basic libraries and Mineunit assertions
 
 local assert = require('luassert.assert')
+mineunit.utils = require("mineunit.assert")
+local noop = mineunit.utils.noop
 
 -- Constants
 
@@ -18,12 +20,27 @@ DIR_DELIM = "/"
 -- Engine API
 
 local core = {}
-_G.core = core
+
+core.register_item_raw = noop
+core.unregister_item_raw = noop
+core.register_alias_raw = noop
 
 function core.get_builtin_path()
 	local tag = mineunit:config("engine_version")
 	return (tag == "mineunit" and mineunit:config("mineunit_path")
 		or mineunit:config("core_root") .. DIR_DELIM .. tag) .. DIR_DELIM
+end
+
+function core.get_worldpath(...)
+	return mineunit:get_worldpath(...)
+end
+
+function core.get_modpath(...)
+	return mineunit:get_modpath(...)
+end
+
+function core.get_current_modname(...)
+	return mineunit:get_current_modname(...)
 end
 
 function core.global_exists(name)
@@ -50,6 +67,10 @@ function core.gettext(value)
 	return value
 end
 
+function core.is_singleplayer()
+	return mineunit:config("singleplayer")
+end
+
 local core_timeofday = 0.5
 function core.get_timeofday()
 	return core_timeofday
@@ -64,6 +85,10 @@ end
 function core.get_node_light(pos, timeofday)
 	timeofday = timeofday or core.get_timeofday()
 	return mineunit.utils.round(math.sin(timeofday * 3.14) * 15)
+end
+
+function core.compare_block_status(pos, status)
+	return true
 end
 
 local json = require('mineunit.lib.json')
@@ -83,3 +108,13 @@ end
 local origin
 function core.get_last_run_mod() return origin end
 function core.set_last_run_mod(v) origin = v end
+
+-- Engine version compatibility
+
+-- 5.6.x releases had vector defined in engine
+_G.vector = { metatable = {} }
+
+-- Set engine core and its aliases
+
+_G.core = core
+_G.minetest = core
